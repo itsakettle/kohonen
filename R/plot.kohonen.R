@@ -152,7 +152,7 @@ plot.kohprop <- function(x, property, main, palette.name, ncolors,
            y0=x$grid$pts[arcs$from, 2],
            x1=x$grid$pts[arcs$to, 1],
            y1=x$grid$pts[arcs$to, 2],
-           lwd=arcs$width) 
+           lwd=arcs$width)
   }
   
   title.y <- max(x$grid$pts[,2]) + 1.2
@@ -179,9 +179,15 @@ plot.kohprop <- function(x, property, main, palette.name, ncolors,
                                include.lowest = TRUE))
   bgcolors[!is.na(showcolors)] <- bgcol[showcolors[!is.na(showcolors)]]
 
-  # itsakettle - used to be 0.5
+  
+  if(!is.null(arcs)) {
+    circle.radius <- 0.35
+  } else {
+    circle.radius <- 0.5
+  }
+  
   symbols(x$grid$pts[, 1], x$grid$pts[, 2],
-          circles = rep(0.35, nrow(x$grid$pts)), inches = FALSE,
+          circles = rep(circle.radius, nrow(x$grid$pts)), inches = FALSE,
           add = TRUE, fg = "black", bg = bgcolors)
 
   ## if contin, a pretty labelling of z colors will be used; if not,
@@ -298,7 +304,7 @@ plot.kohcounts <- function(x, classif, main, palette.name, ncolors,
 ### Introduced for version 2.0.5: Jan 16, 2009
 
 plot.kohUmatrix <- function(x, classif, main, palette.name, ncolors,
-                            zlim, heatkey, keepMargins, heatkeywidth, ...)
+                            zlim, heatkey, keepMargins, heatkeywidth, draw.arcs=FALSE, ...)
 {
   if (x$method != "som" & x$method != "supersom")
     stop("Neighbour distance plot only implemented for (super)som")
@@ -332,17 +338,21 @@ plot.kohUmatrix <- function(x, classif, main, palette.name, ncolors,
       }
     }
   }
-  # set all elements on and below diagonal to NA
-  nhbrdist.arcs <- as.numeric(nhbrdist)
-  nhbrdist.arcs[lower.tri(nhbrdist, diag=TRUE)] <- NA
-  nhbrdist.arcs.matrix <- matrix(nhbrdist.arcs,
-                                 nrow=dim(nhbrdist)[1],
-                                 ncol=dim(nhbrdist)[1])
-  arcs <- na.omit(melt(nhbrdist.arcs.matrix))
-  colnames(arcs) <- c('from', 'to', 'width')
-  arcs$width <- 6.3 - arcs$width/max(arcs$width)*6
-  neigh.dists <- colSums(nhbrdist, na.rm = TRUE)
   
+  arcs <- NULL
+  if(draw.arcs==TRUE) {
+    # set all elements on and below diagonal to NA
+    nhbrdist.arcs <- as.numeric(nhbrdist)
+    nhbrdist.arcs[lower.tri(nhbrdist, diag=TRUE)] <- NA
+    nhbrdist.arcs.matrix <- matrix(nhbrdist.arcs,
+                                   nrow=dim(nhbrdist)[1],
+                                   ncol=dim(nhbrdist)[1])
+    arcs <- na.omit(melt(nhbrdist.arcs.matrix))
+    colnames(arcs) <- c('from', 'to', 'width')
+    arcs$width <- 6.3 - arcs$width/max(arcs$width)*6
+  }
+  
+  neigh.dists <- colSums(nhbrdist, na.rm = TRUE)
   plot.kohprop(x, property = neigh.dists, main = main,
                palette.name = palette.name, ncolors = ncolors,
                zlim = zlim, heatkey = heatkey, contin = TRUE,
